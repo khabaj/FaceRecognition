@@ -36,7 +36,7 @@
    </right>
 	<bottom>
 		<HBox alignment="center">
-			<Button fx:id="cameraButton" alignment="CENTER" disable="true" layoutX="240.0" layoutY="15.0" mnemonicParsing="false" onAction="#startCamera" prefHeight="35.0" prefWidth="95.0" text="Start Camera" />
+			<Button fx:id="cameraButton" alignment="CENTER" layoutX="240.0" layoutY="15.0" mnemonicParsing="false" onAction="#startCamera" prefHeight="35.0" prefWidth="95.0" text="Start Camera" />
          <padding>
             <Insets bottom="10.0" left="10.0" right="10.0" top="10.0" />
          </padding>
@@ -50,37 +50,21 @@
          <children>
             <VBox layoutX="6.0" layoutY="8.0" prefHeight="216.0" prefWidth="126.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                <children>
-                  <TitledPane animated="false" collapsible="false" prefHeight="122.0" prefWidth="126.0" text="Detect: ">
-                    <content>
-                      <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
-                           <children>
-                              <VBox prefHeight="99.0" prefWidth="126.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
-                                 <children>
-                                    <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="138.0" selected="true" text="Face">
-                                       <VBox.margin>
-                                          <Insets />
-                                       </VBox.margin>
-                                    </CheckBox>
-                                    <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="139.0" text="Eyes">
-                                       <VBox.margin>
-                                          <Insets />
-                                       </VBox.margin>
-                                    </CheckBox>
-                                    <CheckBox mnemonicParsing="false" prefHeight="17.0" prefWidth="133.0" text="Mouth" />
-                                 </children>
-                              </VBox>
-                           </children>
-                        </AnchorPane>
-                    </content>
-                  </TitledPane>
-                  <TitledPane animated="false" prefHeight="124.0" prefWidth="126.0" text="Classifier:">
+                  <TitledPane fx:id="classifierPane" animated="false" collapsible="false" prefHeight="143.0" prefWidth="126.0" text="Classifiers:">
                     <content>
                       <AnchorPane minHeight="0.0" minWidth="0.0" prefHeight="180.0" prefWidth="200.0">
                            <children>
                               <VBox layoutX="19.6" layoutY="19.6" prefHeight="79.0" prefWidth="124.0" AnchorPane.bottomAnchor="0.0" AnchorPane.leftAnchor="0.0" AnchorPane.rightAnchor="0.0" AnchorPane.topAnchor="0.0">
                                  <children>
-                        				<CheckBox fx:id="haarClassifier" onAction="#haarSelected" text="Haar Classifier" />
-                        				<CheckBox fx:id="lbpClassifier" onAction="#lbpSelected" text="LBP Classifier" />
+                                    <Label text="Haar Classifiers:" />
+                                    <RadioButton fx:id="haarFrontalFaceAlt" mnemonicParsing="false" onAction="#selectClassifier" selected="true" text="Frontal Face">
+                                       <toggleGroup>
+                                          <ToggleGroup fx:id="detClassifier" />
+                                       </toggleGroup>
+                                    </RadioButton>
+                                    <Separator prefHeight="23.0" prefWidth="105.0" />
+                                    <Label text="LBP Classifier:" />
+                                    <RadioButton fx:id="lbpFrontalFace" mnemonicParsing="false" onAction="#selectClassifier" text="Frontal Face" toggleGroup="$detClassifier" />
                                  </children>
                               </VBox>
                            </children>

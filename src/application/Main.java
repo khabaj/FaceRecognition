@@ -15,7 +15,7 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {		
 		
 		try {			
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("FaceRec2.fxml"));
+			FXMLLoader loader = new FXMLLoader(getClass().getResource("FaceRecognition.fxml"));
 			BorderPane rootElement = (BorderPane) loader.load();
 			Scene scene = new Scene(rootElement, 900, 600);
 			

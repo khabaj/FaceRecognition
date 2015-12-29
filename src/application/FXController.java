@@ -27,12 +27,18 @@ import org.opencv.videoio.VideoCapture;
 import javafx.event.Event;
 import javafx.fxml.FXML;
 import javafx.scene.control.Button;
-import javafx.scene.control.CheckBox;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TitledPane;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
 public class FXController {
 
+	class ClassifierPath {
+		public static final String HAAR_FRONTAL_FACE_ALT = "resources/haarcascades/haarcascade_frontalface_alt.xml";
+		public static final String LBP_FRONTAL_FACE = "resources/lbpcascades/lbpcascade_frontalface.xml";
+	}
+	
 	// FXML buttons
 	@FXML
 	private Button cameraButton;
@@ -41,11 +47,15 @@ public class FXController {
 	private ImageView originalFrame;
 	@FXML
 	private ImageView histogram;
-	// checkboxes for enabling/disabling a classifier
+	
+	// radio button for enabling/disabling a classifier
 	@FXML
-	private CheckBox haarClassifier;
+	private RadioButton haarFrontalFaceAlt;
 	@FXML
-	private CheckBox lbpClassifier;
+	private RadioButton lbpFrontalFace;
+	
+	@FXML
+	private TitledPane classifierPane;
 
 	// a timer for acquiring the video stream
 	private ScheduledExecutorService timer;
@@ -57,6 +67,7 @@ public class FXController {
 	// face cascade classifier
 	private CascadeClassifier faceCascade;
 	private int absoluteFaceSize;
+	
 
 	/**
 	 * Init the controller, at start time
@@ -65,6 +76,7 @@ public class FXController {
 		this.capture = new VideoCapture();
 		this.faceCascade = new CascadeClassifier();
 		this.absoluteFaceSize = 0;
+		this.faceCascade.load(ClassifierPath.HAAR_FRONTAL_FACE_ALT);
 	}
 
 	/**
@@ -78,9 +90,8 @@ public class FXController {
 		originalFrame.setPreserveRatio(true);
 
 		if (!this.cameraActive) {
-			// disable setting checkboxes
-			this.haarClassifier.setDisable(true);
-			this.lbpClassifier.setDisable(true);
+			// disable classifiers radio buttons
+			classifierPane.setDisable(true);
 
 			// start the video capture
 			this.capture.open(0);
@@ -90,13 +101,9 @@ public class FXController {
 				this.cameraActive = true;
 
 				// grab a frame every 33 ms (30 frames/sec)
-				Runnable frameGrabber = new Runnable() {
-
-					@Override
-					public void run() {
-						Image imageToShow = grabFrame();
-						originalFrame.setImage(imageToShow);
-					}
+				Runnable frameGrabber = () -> {
+					Image imageToShow = grabFrame();
+					originalFrame.setImage(imageToShow);
 				};
 
 				this.timer = Executors.newSingleThreadScheduledExecutor();
@@ -113,9 +120,8 @@ public class FXController {
 			this.cameraActive = false;
 			// update again the button content
 			this.cameraButton.setText("Start Camera");
-			// enable classifiers checkboxes
-			this.haarClassifier.setDisable(false);
-			this.lbpClassifier.setDisable(false);
+			// enable classifiers radio buttons
+			classifierPane.setDisable(false);
 
 			// stop the timer
 			try {
@@ -149,13 +155,12 @@ public class FXController {
 				// read the current frame
 				this.capture.read(frame);
 
-				// if the frame is not empty, process it
 				if (!frame.empty()) {
 					// face detection
 					this.detectAndDisplay(frame);
 
 					// show the histogram
-					this.showHistogram(frame, false);
+					this.showHistogram(frame);
 					
 					// convert the Mat object (OpenCV) to Image (JavaFX)
 					imageToShow = mat2Image(frame);
@@ -185,11 +190,11 @@ public class FXController {
 		// equalize the frame histogram to improve the result
 		Imgproc.equalizeHist(grayFrame, grayFrame);
 
-		// compute minimum face size (20% of the frame height, in our case)
+		// compute minimum face size (25% of the frame height in this case)
 		if (this.absoluteFaceSize == 0) {
 			int height = grayFrame.rows();
-			if (Math.round(height * 0.2f) > 0) {
-				this.absoluteFaceSize = Math.round(height * 0.2f);
+			if (Math.round(height * 0.25f) > 0) {
+				this.absoluteFaceSize = Math.round(height * 0.25f);
 			}
 		}
 
@@ -203,46 +208,29 @@ public class FXController {
 			Imgproc.rectangle(frame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0), 3);
 
 	}
-
-	/**
-	 * The action triggered by selecting the Haar Classifier checkbox. It loads
-	 * the trained set to be used for frontal face detection.
-	 */
+	
 	@FXML
-	protected void haarSelected(Event event) {
-		// check whether the lpb checkbox is selected and deselect it
-		if (this.lbpClassifier.isSelected())
-			this.lbpClassifier.setSelected(false);
-
-		this.checkboxSelection("resources/haarcascades/haarcascade_frontalface_alt.xml");
-	}
-
-	/**
-	 * The action triggered by selecting the LBP Classifier checkbox. It loads
-	 * the trained set to be used for frontal face detection.
-	 */
-	@FXML
-	protected void lbpSelected(Event event) {
-		// check whether the haar checkbox is selected and deselect it
-		if (this.haarClassifier.isSelected())
-			this.haarClassifier.setSelected(false);
-
-		this.checkboxSelection("resources/lbpcascades/lbpcascade_frontalface.xml");
-	}
-
-	/**
-	 * Method for loading a classifier trained set from disk
-	 * 
-	 * @param classifierPath
-	 *            the path on disk where a classifier trained set is located
-	 */
-	private void checkboxSelection(String classifierPath) {
+	private void selectClassifier(Event event) {
+		
+		RadioButton btn = ((RadioButton) event.getSource());
+		String classifierPath = "";
+		
+		switch(btn.getId()) {
+			case "frontalFaceAltClassifier":
+				classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
+				break;
+			case "":
+				classifierPath = ClassifierPath.LBP_FRONTAL_FACE;
+				break;				
+			default:
+				classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
+		}
+		
 		// load the classifier(s)
 		this.faceCascade.load(classifierPath);
-
-		// now the video capture can start
-		this.cameraButton.setDisable(false);
 	}
+	
+	
 
 	/**
 	 * Convert a Mat object (OpenCV) in the corresponding Image for JavaFX
@@ -261,7 +249,7 @@ public class FXController {
 		return new Image(new ByteArrayInputStream(buffer.toArray()));
 	}
 	
-	private void showHistogram(Mat frame, boolean gray)
+	private void showHistogram(Mat frame)
 	{
 		// split the frames in multiple images
 		List<Mat> images = new ArrayList<Mat>();
@@ -277,17 +265,11 @@ public class FXController {
 		// compute the histograms for the B, G and R components
 		Mat hist_b = new Mat();
 		Mat hist_g = new Mat();
-		Mat hist_r = new Mat();
+		Mat hist_r = new Mat();		
 		
-		// B component or gray image
 		Imgproc.calcHist(images.subList(0, 1), channels, new Mat(), hist_b, histSize, histRange, false);
-		
-		// G and R components (if the image is not in gray scale)
-		if (!gray)
-		{
-			Imgproc.calcHist(images.subList(1, 2), channels, new Mat(), hist_g, histSize, histRange, false);
-			Imgproc.calcHist(images.subList(2, 3), channels, new Mat(), hist_r, histSize, histRange, false);
-		}
+		Imgproc.calcHist(images.subList(1, 2), channels, new Mat(), hist_g, histSize, histRange, false);
+		Imgproc.calcHist(images.subList(2, 3), channels, new Mat(), hist_r, histSize, histRange, false);		
 		
 		// draw the histogram
 		int hist_w = 150; // width of the histogram image
@@ -295,32 +277,22 @@ public class FXController {
 		int bin_w = (int) Math.round(hist_w / histSize.get(0, 0)[0]);
 		
 		Mat histImage = new Mat(hist_h, hist_w, CvType.CV_8UC3, new Scalar(0, 0, 0));
+		
 		// normalize the result to [0, histImage.rows()]
 		Core.normalize(hist_b, hist_b, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
-		
-		// for G and R components
-		if (!gray)
-		{
-			Core.normalize(hist_g, hist_g, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
-			Core.normalize(hist_r, hist_r, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
-		}
+		Core.normalize(hist_g, hist_g, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
+		Core.normalize(hist_r, hist_r, 0, histImage.rows(), Core.NORM_MINMAX, -1, new Mat());
 		
 		// effectively draw the histogram(s)
 		for (int i = 1; i < histSize.get(0, 0)[0]; i++)
 		{
-			// B component or gray image
+			
 			Imgproc.line(histImage, new Point(bin_w * (i - 1), hist_h - Math.round(hist_b.get(i - 1, 0)[0])),
 					new Point(bin_w * (i), hist_h - Math.round(hist_b.get(i, 0)[0])), new Scalar(255, 0, 0), 2, 8, 0);
-			// G and R components (if the image is not in gray scale)
-			if (!gray)
-			{
-				Imgproc.line(histImage, new Point(bin_w * (i - 1), hist_h - Math.round(hist_g.get(i - 1, 0)[0])),
-						new Point(bin_w * (i), hist_h - Math.round(hist_g.get(i, 0)[0])), new Scalar(0, 255, 0), 2, 8,
-						0);
-				Imgproc.line(histImage, new Point(bin_w * (i - 1), hist_h - Math.round(hist_r.get(i - 1, 0)[0])),
-						new Point(bin_w * (i), hist_h - Math.round(hist_r.get(i, 0)[0])), new Scalar(0, 0, 255), 2, 8,
-						0);
-			}
+			Imgproc.line(histImage, new Point(bin_w * (i - 1), hist_h - Math.round(hist_g.get(i - 1, 0)[0])),
+					new Point(bin_w * (i), hist_h - Math.round(hist_g.get(i, 0)[0])), new Scalar(0, 255, 0), 2, 8, 0);
+			Imgproc.line(histImage, new Point(bin_w * (i - 1), hist_h - Math.round(hist_r.get(i - 1, 0)[0])),
+					new Point(bin_w * (i), hist_h - Math.round(hist_r.get(i, 0)[0])), new Scalar(0, 0, 255), 2, 8, 0);
 		}
 		
 		// display the histogram...
@@ -328,5 +300,4 @@ public class FXController {
 		this.histogram.setImage(histImg);
 
 	}
-
 }
