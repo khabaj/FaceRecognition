@@ -13,6 +13,7 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
+import org.opencv.face.FaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -48,6 +49,7 @@ public class BaseController implements Initializable {
 	protected CascadeClassifier faceCascade; // face cascade classifier
 	protected int absoluteFaceSize;
 	protected int frameSize;
+	protected FaceRecognizer recognizer = null;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {
@@ -65,16 +67,16 @@ public class BaseController implements Initializable {
 		String classifierPath = "";
 
 		switch (btn.getId()) {
-		case "frontalFaceAltClassifier":
-			classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
-			break;
-		case "":
-			classifierPath = ClassifierPath.LBP_FRONTAL_FACE;
-			break;
-		default:
-			classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
+			case "frontalFaceAltClassifier":
+				classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
+				break;
+			case "":
+				classifierPath = ClassifierPath.LBP_FRONTAL_FACE;
+				break;
+			default:
+				classifierPath = ClassifierPath.HAAR_FRONTAL_FACE_ALT;
 		}
-		
+
 		this.faceCascade.load(classifierPath); // load the classifier(s)
 	}
 
@@ -191,11 +193,24 @@ public class BaseController implements Initializable {
 	 */
 	protected void detectAndDisplay(Mat frame) {
 		MatOfRect faces = detectFaces(frame);
+		Mat grayFrame = new Mat();
+		Imgproc.cvtColor(frame, grayFrame, Imgproc.COLOR_BGR2GRAY);
+		Imgproc.equalizeHist(grayFrame, grayFrame);
 		
 		// each rectangle in faces is a face: draw them!
 		Rect[] facesArray = faces.toArray();
-		for (int i = 0; i < facesArray.length; i++)
+		for (int i = 0; i < facesArray.length; i++) {
+			
+			Mat faceToRecognize = grayFrame.submat(facesArray[i]);
+			Imgproc.resize(faceToRecognize, faceToRecognize, new Size(200,200));
+			int userId = recognizer.predict(faceToRecognize);
+			System.out.println("Recognized user: " + userId);
+			
 			Imgproc.rectangle(frame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0), 3);
+			Imgproc.putText(frame, "UserId: " + userId, facesArray[i].tl(), 2, 1, new Scalar(255, 255, 0));
+		}
+		
+		
 
 	}
 }
