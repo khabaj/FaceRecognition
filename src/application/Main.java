@@ -15,11 +15,11 @@ public class Main extends Application {
 	public void start(Stage primaryStage) {		
 		
 		try {			
-			FXMLLoader loader = new FXMLLoader(getClass().getResource("RootLayout.fxml"));
+			FXMLLoader loader = new FXMLLoader(Main.class.getResource("views/RootLayout.fxml"));
 			TabPane rootElement = (TabPane) loader.load();
 			Scene scene = new Scene(rootElement, 900, 600);
 			
-			scene.getStylesheets().add(getClass().getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(Main.class.getResource("application.css").toExternalForm());
 			primaryStage.setTitle("Face Recognition");
 			primaryStage.setMinWidth(1000);
 			primaryStage.setMinHeight(600);
@@ -32,7 +32,14 @@ public class Main extends Application {
 	}
 	
 	public static void main(String[] args) {
-		System.loadLibrary(Core.NATIVE_LIBRARY_NAME);
-		launch(args);
+		try {
+			String opencvpath = System.getProperty("user.dir") + "\\";
+			System.load(opencvpath + Core.NATIVE_LIBRARY_NAME + ".dll");
+			launch(args);
+		} catch (Exception e) {
+			
+		} finally {
+			SQLiteConnection.closeConnection();
+		}
 	}
 }

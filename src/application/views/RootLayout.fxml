@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.*?>
+<?import javafx.scene.image.*?>
+<?import javafx.scene.control.*?>
+<?import java.lang.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.scene.layout.BorderPane?>
+
+
+<TabPane xmlns="http://javafx.com/javafx/8.0.40" xmlns:fx="http://javafx.com/fxml/1" fx:controller="application.controller.RootController">
+   <tabs>
+      <Tab closable="false" text="User" fx:id="userTab">
+      </Tab>
+      <Tab closable="false" text="Recognition" fx:id="recognitionTab">
+      </Tab>
+   </tabs>
+</TabPane>
