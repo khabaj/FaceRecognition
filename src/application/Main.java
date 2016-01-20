@@ -19,7 +19,7 @@ public class Main extends Application {
 			TabPane rootElement = (TabPane) loader.load();
 			Scene scene = new Scene(rootElement, 900, 600);
 			
-			scene.getStylesheets().add(Main.class.getResource("application.css").toExternalForm());
+			scene.getStylesheets().add(Main.class.getResource("css/application.css").toExternalForm());
 			primaryStage.setTitle("Face Recognition");
 			primaryStage.setMinWidth(1000);
 			primaryStage.setMinHeight(600);
@@ -36,10 +36,9 @@ public class Main extends Application {
 			String opencvpath = System.getProperty("user.dir") + "\\";
 			System.load(opencvpath + Core.NATIVE_LIBRARY_NAME + ".dll");
 			launch(args);
-		} catch (Exception e) {
-			
+		} catch (Exception e) {			
 		} finally {
-			SQLiteConnection.closeConnection();
+			SQLiteConnector.closeConnection();
 		}
 	}
 }

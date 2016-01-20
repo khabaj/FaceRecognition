@@ -6,11 +6,11 @@ import java.sql.SQLException;
 
 import org.sqlite.SQLiteConfig;
 
-public class SQLiteConnection {
+public class SQLiteConnector {
 
 	private static Connection connection;
 
-	private SQLiteConnection() {
+	private SQLiteConnector() {
 
 	}
 	

@@ -13,7 +13,6 @@ import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
-import org.opencv.face.FaceRecognizer;
 import org.opencv.imgcodecs.Imgcodecs;
 import org.opencv.imgproc.Imgproc;
 import org.opencv.objdetect.CascadeClassifier;
@@ -32,8 +31,8 @@ import javafx.scene.image.ImageView;
 public class BaseController implements Initializable {
 
 	class ClassifierPath {
-		public static final String HAAR_FRONTAL_FACE_ALT = "resources/haarcascades/haarcascade_frontalface_alt.xml";
-		public static final String LBP_FRONTAL_FACE = "resources/lbpcascades/lbpcascade_frontalface.xml";
+		public static final String HAAR_FRONTAL_FACE_ALT = "classifiers/haarcascades/haarcascade_frontalface_alt.xml";
+		public static final String LBP_FRONTAL_FACE = "classifiers/lbpcascades/lbpcascade_frontalface.xml";
 	}
 
 	@FXML
@@ -49,7 +48,6 @@ public class BaseController implements Initializable {
 	protected CascadeClassifier faceCascade; // face cascade classifier
 	protected int absoluteFaceSize;
 	protected int frameSize;
-	protected FaceRecognizer recognizer = null;
 
 	@Override
 	public void initialize(URL location, ResourceBundle resources) {

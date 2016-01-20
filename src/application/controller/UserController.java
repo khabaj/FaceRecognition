@@ -2,8 +2,8 @@ package application.controller;
 
 import java.io.ByteArrayOutputStream;
 import java.net.URL;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.Optional;
 import java.util.ResourceBundle;
 
@@ -13,7 +13,6 @@ import org.opencv.core.Mat;
 import org.opencv.core.MatOfRect;
 import org.opencv.core.Rect;
 import org.opencv.core.Size;
-import org.opencv.face.Face;
 import org.opencv.imgproc.Imgproc;
 
 import application.DAO;
@@ -23,11 +22,13 @@ import javafx.collections.ObservableList;
 import javafx.embed.swing.SwingFXUtils;
 import javafx.fxml.FXML;
 import javafx.fxml.Initializable;
+import javafx.scene.control.Button;
 import javafx.scene.control.TableColumn;
 import javafx.scene.control.TableView;
 import javafx.scene.control.TextInputDialog;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.HBox;
 
 public class UserController extends BaseController implements Initializable {
@@ -122,11 +123,19 @@ public class UserController extends BaseController implements Initializable {
 						ImageIO.write(SwingFXUtils.fromFXImage(image, null), "png", byteOutput);
 						byte[] res = byteOutput.toByteArray();
 
-						DAO.saveImage(res, userId);
+						Integer imageId = DAO.saveImage(res, userId);
 
 						Imgproc.resize(frame, frame, new Size(90, 90));
 						image = mat2Image(frame);
-						userImages.getChildren().add(new ImageView(image));
+						
+						Button deleteButton = new Button("-");
+						deleteButton.setId("deleteImageButton" + imageId);
+						deleteButton.setOnAction((event) -> deletImage(imageId));
+						
+						AnchorPane anchorPane = new AnchorPane();
+						anchorPane.getChildren().add(new ImageView(image));
+						anchorPane.getChildren().add(new Button("-"));
+						userImages.getChildren().add(anchorPane);
 					}
 				}
 			} catch (Exception e) {
@@ -134,12 +143,25 @@ public class UserController extends BaseController implements Initializable {
 			}
 		}
 	}
+	
+	
+	private void deletImage(Integer imageId){
+		DAO.deleteImage(imageId);
+		showImages();
+	}
 
 	private void showImages() {
 		userImages.getChildren().clear();
-		List<Image> imageList = DAO.getImagesByUser(selectedUser.getUserId());
-		for (Image image : imageList) {
-			userImages.getChildren().add(new ImageView(image));
+		Map<Integer, Image> imageList = DAO.getImagesByUser(selectedUser.getUserId());
+		for(Entry<Integer, Image> entry : imageList.entrySet()) {
+			AnchorPane anchorPane = new AnchorPane();
+			anchorPane.getChildren().add(new ImageView(entry.getValue()));
+			Button deleteButton = new Button("-");
+			deleteButton.setId("deleteImageButton" + entry.getKey());
+			deleteButton.setOnAction((event) -> deletImage(entry.getKey()));
+			
+			anchorPane.getChildren().add(deleteButton);
+			userImages.getChildren().add(anchorPane);
 		}
 	}
 }

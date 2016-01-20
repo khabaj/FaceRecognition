@@ -1,7 +1,10 @@
 package application.controller;
 
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
+import java.util.ResourceBundle;
 
 import org.opencv.core.Core;
 import org.opencv.core.CvType;
@@ -14,17 +17,41 @@ import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
 import org.opencv.face.Face;
+import org.opencv.face.FaceRecognizer;
 import org.opencv.imgproc.Imgproc;
 
 import application.DAO;
+import javafx.event.Event;
 import javafx.fxml.FXML;
+import javafx.fxml.Initializable;
+import javafx.scene.control.RadioButton;
+import javafx.scene.control.TitledPane;
+import javafx.scene.control.ToggleGroup;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
 
-public class RecognitionController extends BaseController{
+public class RecognitionController extends BaseController implements Initializable{
 
 	@FXML
 	private ImageView histogram;
+	
+	@FXML
+	private TitledPane recognitionAlgPane;
+	@FXML
+	ToggleGroup recAlgorithm;
+	
+	protected FaceRecognizer recognizer = null;
+	String recognitionDataFileName;
+	Map <Integer, String> usersMap;
+	
+	
+	@Override
+	public void initialize(URL location, ResourceBundle resources) {
+		super.initialize(location, resources);
+		recognizer = Face.createEigenFaceRecognizer();
+		//recognizer = Face.createEigenFaceRecognizer(100, 10000);
+		recognitionDataFileName = "EigenFacesData.yml";
+	}
 	
 	@Override
 	protected Image grabFrame() {
@@ -62,29 +89,68 @@ public class RecognitionController extends BaseController{
 			
 			Mat faceToRecognize = grayFrame.submat(facesArray[i]);
 			Imgproc.resize(faceToRecognize, faceToRecognize, new Size(200,200));
-			int userId = recognizer.predict(faceToRecognize);
-			System.out.println("Recognized user: " + userId);
+			int userId = recognizer.predict(faceToRecognize);			
+			
+			String text = usersMap.get(userId) != null ? usersMap.get(userId) +"("+userId+")" : "unknown";
 			
 			Imgproc.rectangle(frame, facesArray[i].tl(), facesArray[i].br(), new Scalar(0, 255, 0), 3);
-			Imgproc.putText(frame, "UserId: " + userId, facesArray[i].tl(), 2, 1, new Scalar(255, 255, 0));
+			Imgproc.putText(frame, "User: " + text, facesArray[i].tl(), 2, 0.8, new Scalar(255, 255, 0));
 		}
 	}
 	
 	@FXML
-	private void train() {
-		recognizer = Face.createLBPHFaceRecognizer();
-		List<Mat> images = new ArrayList<>();
-
-		Mat labels = new Mat();
-		DAO.getTrainingData(images, labels);
-
-		recognizer.train(images, labels);
-		recognizer.save("lbph.yml");
+	@Override
+	protected void startCamera() {
+		if (!this.cameraActive) {
+			recognitionAlgPane.setDisable(true);
+			train();
+		}
+		else {
+			recognitionAlgPane.setDisable(false);
+		}
+		super.startCamera();
 	}
 	
-	@FXML
-	private void selectRecAlgorithm() {
+	
+	private void train() {
+		List<Mat> images = new ArrayList<>();
+		Mat labels = new Mat();
+		DAO.getTrainingData(images, labels);
+		recognizer.train(images, labels);
+		usersMap = DAO.readUsersMap();
 		
+		//recognizer.save(recognitionDataFileName);
+	}
+				
+	/*private void loadRecognizer() {		
+		try {
+			recognizer.load(recognitionDataFileName);
+		} catch (Exception e) {
+			train();
+		}				
+	}*/
+	
+	@FXML
+	private void selectRecAlgorithm(Event event) {
+		RadioButton btn = ((RadioButton) event.getSource());
+
+		switch (btn.getId()) {
+			case "eigenfacesAlgorithm":
+				recognizer = Face.createEigenFaceRecognizer();
+				recognitionDataFileName = "EigenFacesData.yml";
+				break;
+			case "fisherfacesAlgorithm":
+				recognizer = Face.createFisherFaceRecognizer();
+				recognitionDataFileName = "FisherFacesData.yml";
+				break;
+			case "lbpAlgorithm":
+				recognizer = Face.createLBPHFaceRecognizer();
+				recognitionDataFileName = "LBPHFaces.yml";
+				break;
+			default:
+				recognizer = Face.createEigenFaceRecognizer();
+				recognitionDataFileName = "EigenFacesData.yml";
+		}
 	}
 	
 	private void showHistogram(Mat frame) {
